@@ -1,0 +1,4 @@
+# dsh-notify-xc bundle patch（加载单插件：浏览器系统通知）
+- insert:
+    - id: dsh-notify-xc
+      name: dsh-notify-xc

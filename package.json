@@ -1,0 +1,66 @@
+{
+  "name": "dsh-notify-xc",
+  "version": "0.1.0",
+  "description": "DSH 浏览器通知插件（dsh-agent-notify 的新版重写）：agent 完成任务或需要你输入/批准/审阅计划时，弹出系统级通知（浏览器 Notification API，Windows 通知中心气泡，无网页内弹窗、无合成音），点击气泡直达会话；设置页在 设置 → 任务通知。纯浏览器端插件（host half 为空）。",
+  "type": "module",
+  "main": "lib/index.js",
+  "author": "xchannel1987",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xchannel1987/dsh-notify-xc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xchannel1987/dsh-notify-xc/issues"
+  },
+  "homepage": "https://github.com/xchannel1987/dsh-notify-xc#readme",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "notification",
+    "notify",
+    "windows",
+    "toast",
+    "web"
+  ],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README_EN.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-api-session-controller"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}
