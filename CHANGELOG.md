@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.2.1 (2026-09-03)
+
+- fix: 移动端权限误报「已拒绝」——iOS 16.4+ 普通 Safari/Chrome 标签页中 Notification API 虽存在但永远无法授权，Android WebView / 微信、QQ、钉钉、飞书等 App 内置浏览器通知权限被宿主强制禁用；旧实现只按 `'Notification' in window` 判断，这些环境会误显示「已拒绝」及桌面端无用指引。
+- fix: 补全移动端能力检测——iOS 的系统通知仅有 Service Worker Web Push 一条路（需 HTTPS + 添加到主屏幕 + 网站注册 SW），本插件基于本地 new Notification() 未接入该机制，iOS 上一律弹不出；WebView / 微信、QQ 等内置浏览器同样不支持。全部按「不支持」置灰设置页并按环境分场景提示，不再误导用户去处理「已拒绝」。
+- ui: 「权限被拒绝」指引改为跨浏览器通用文案（不再只有 Chrome 地址栏操作）。
+
 ## v0.2.0 (2026-09-02)
 
 - feat: 新增「运行出错通知」——会话本轮以 turn-error 结束时弹通知，与任务完成互斥；工具级失败/用户中断不通知。
