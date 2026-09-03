@@ -88,7 +88,7 @@ The browser asks for notification permission on your first click; you can also g
 - Compatibility rewrite of [dsh-agent-notify](https://github.com/chidaic/dsh-agent-notify) for current DSH, verified against 0.1.2-alpha.4
 - Pure browser-side plugin (empty host half), hand-written bundle with no build step
 - Settings page registered into the official `settings.section` slot (same UI root as official settings pages)
-- Depends on the browser `Notification` API (desktop Edge / Chrome); on mobile browsers without support the settings page greys out and shows a notice
+- Depends on the browser `Notification` API (desktop Edge / Chrome); on mobile browsers without support the settings page greys out and shows a notice (iOS system notifications only work via Service Worker Web Push, which this plugin does not implement)
 
 ## 📄 License
 
