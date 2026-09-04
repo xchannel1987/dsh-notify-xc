@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.2.2 (2026-09-04)
+
+- fix: 主会话派出后台子代理（或后台任务未跑完）时误报「任务完成」。根因：完成判定只看会话列表里 `running true->false` 边沿，而 agent 把活交给后台子代理后会**让出回合**等结果投递，此时 agent 驱动确实停了，会话却远没结束，于是弹出完成通知（还会连着弹子代理一条）。
+- fix: 完成判定加两道闸（`waitForBackground`，默认开）：① `hasLiveBackgroundWork` —— 从会话列表快照自带的 `byId`(parentId/running) / `subagentsByParent`(activity running) / `jobsBySession` 三个映射递归判断该会话是否仍有在跑的子代理（含孙代理等更深层级）或未结束的**代理类**后台任务（kind ∈ subagent|agent|workflow|ralph|goal），有则挂起不通知，等工作全部结束后补判一次；② `DONE_GRACE_MS` 1.2s 宽限期 —— 到点重读快照，期间会话被结果唤醒重新 running 或又派了新活就不发（顺带躲开状态帧到达顺序造成的瞬时误报）。
+- design: 后台 shell 任务（`pwsh` / `bash` run_in_background，含常驻 dev server）**不参与**压制定通知的判定 —— 这类任务可能一直 running，用它压通知会把「任务完成」永久吞掉；代理类任务跑完必结束，所以可以放心挂起。
+- feat: 设置页新增「等子代理 / 工作流时不通知」开关（关掉即恢复旧行为）；「任务完成」与「运行出错」两类通知共用这套判定。
+- chore: 调试钩子新增 `window.__dshNotifyXc.probe(sessionId)`，直接看某会话是否被判为「仍在等后台工作 / 已挂起 / 有未发出的定时器」，便于排查「为什么没弹通知」。
+
 ## v0.2.1 (2026-09-03)
 
 - fix: 移动端权限误报「已拒绝」——iOS 16.4+ 普通 Safari/Chrome 标签页中 Notification API 虽存在但永远无法授权，Android WebView / 微信、QQ、钉钉、飞书等 App 内置浏览器通知权限被宿主强制禁用；旧实现只按 `'Notification' in window` 判断，这些环境会误显示「已拒绝」及桌面端无用指引。

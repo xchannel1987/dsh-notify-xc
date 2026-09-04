@@ -14,6 +14,12 @@
 ### 🔔 Task-Done Notifications
 - A "Task Finished" toast pops up when a session transitions from running to idle
 - Content includes the session title + last reply summary (when the session is open)
+- **Waiting on a subagent is not "done"**: after delegating to a background subagent
+  (workflow / Ralph / background job included) the main session yields the turn, so
+  `running` goes false even though the session is nowhere near finished — no toast is sent;
+  the check re-runs once that work settles (toggle: "Hold while subagents / workflows run")
+- Long-lived background **shell** jobs (e.g. a dev server the agent started for you) do not
+  participate in this check, otherwise the task-done toast would be swallowed forever
 
 ### 🛑 Error Notifications
 - A "Run Error" toast pops up when a session ends a turn with an error (turn-error)
@@ -47,6 +53,13 @@ Each of the three types (task-done / needs-input / error) has its own independen
 - **Baseline** : The first snapshot after load / reconnect is a baseline only; no historical finishes are replayed
 - **Deduplication** : The same pending request is never re-sent
 - **Subagent Filtering** : Subagent sessions are skipped unless enabled
+- **Yielding ≠ finishing** : While the session still has running subagents (any depth) or
+  unsettled delegation jobs (subagent / workflow / Ralph / goal), no task-done / error toast is
+  sent; the decision is re-evaluated automatically once that work settles, so nothing gets lost
+- **Grace window** : A completion toast is held for 1.2s; if the session is woken back up by a
+  background result in that time, the toast is cancelled (covers out-of-order status frames)
+- Debugging: `window.__dshNotifyXc.probe('<sessionId>')` reports whether that session is
+  currently considered "waiting on background work", "held", or "has a pending timer"
 
 ## 📦 Installation
 
@@ -70,6 +83,7 @@ Settings → **Task Alerts** section (persisted in localStorage):
 | Needs-input notifications | true | Notify when your input / approval / review is needed |
 | Error notifications | true | Notify when a run fails |
 | Include subagent notifications | false | Whether to notify for subagent sessions |
+| Hold while subagents / workflows run | true | Do not announce "done" while the session only yielded its turn to delegated work (shell daemons excluded) |
 | Persistent needs-input | true | Keep needs-input toasts until you act on them |
 | Show workspace attribution | true | Prefix toasts with [workspace] |
 | System notification mode | Always | Off / Background / Always |
