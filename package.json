@@ -1,6 +1,6 @@
 {
   "name": "dsh-notify-xc",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "DSH 浏览器通知插件（dsh-agent-notify 的新版重写）：agent 完成任务或需要你输入/批准/审阅计划时，弹出系统级通知（浏览器 Notification API，Windows 通知中心气泡，无网页内弹窗、无合成音），点击气泡直达会话；设置页在 设置 → 任务通知。纯浏览器端插件（host half 为空）。",
   "type": "module",
   "main": "lib/index.js",

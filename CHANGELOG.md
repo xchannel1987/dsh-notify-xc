@@ -1,6 +1,15 @@
 # CHANGELOG
 
+## v0.2.4 (2026-09-11)
+
+- fix: 运行出错通知失效——旧实现尝试从 `binding.session.getSnapshot().nodes` 读取 `turn-error` 节点，但 session snapshot 实际不包含 `nodes` 字段，导致永远检测不到错误，所有会话结束都发「任务完成」通知（包括 429 限流、认证失败等错误场景）。
+- fix: 改用 `binding.session.getSnapshot().lastAgentError` 字段检测 session 级别的错误，现在 429 限流、API 错误等能正确触发「运行出错」通知。
+- refactor: 新增 `getLastTurnEnd()` 函数统一获取 turn 结束信息，`lastTurnError()` 和 `fireCompletionNotice()` 均使用此函数。
+- refactor: `lastAssistantText()` 暂时返回空字符串（当前 session snapshot 不包含聊天节点），未来可通过 projection 系统访问 `assistant-step` 节点时再实现。
+- note: 当前仍无法区分「用户主动中断」和「正常完成」，因为 session snapshot 不包含 turn 结束原因的详细信息（`interrupted` / `aborted` 等）。未来可通过 projection 系统或事件窗口访问 `turn/end` 事件时再细化。
+
 ## v0.2.3 (2026-09-08)
+ (2026-09-08)
 
 - chore: package.json 新增 `engines.dsh: ">=0.1.2-alpha.4"`，供 dsh-market 展示宿主版本要求并参与兼容性过滤；无功能改动。
 
