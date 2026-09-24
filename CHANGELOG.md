@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.2.5 (2026-09-24)
+
+- chore（工程化规范化，无运行时改动，npm 包内容不变）：
+  - 补建 `src/` 目录：此前仓库**完全没有** `src/`，现以 `lib/` 为准建立同源镜像，`index.js` / `client.js` 与 `lib/` 逐字节一致。
+  - `build.ps1` 升级为统一模板（此前只做 `npm pack`）：以 `lib/` 为准校验并同步 `src/`；`-NoSync` 只校验、发现漂移即报错退出；**只清理「当前版本」的同名 tgz**，历史版本一律保留 —— profile 的 `file:` 依赖可能正指向旧版本文件。
+  - 新增 CI（`.github/workflows/ci.yml`，此前**没有** `.github/`）：`lib/` 产物存在性 + `src/` ↔ `lib/` 逐字节一致性门禁 + 单元测试步骤（无测试文件时自动跳过）；新增 `publish.yml`（release 触发的 npm 官方源发布）。
+  - 补充 `CLAUDE.md`（此前缺失）与 `.gitignore` 的 `CLAUDE.md` 忽略规则。
+
 ## v0.2.4 (2026-09-11)
 
 - fix: 运行出错通知失效——旧实现尝试从 `binding.session.getSnapshot().nodes` 读取 `turn-error` 节点，但 session snapshot 实际不包含 `nodes` 字段，导致永远检测不到错误，所有会话结束都发「任务完成」通知（包括 429 限流、认证失败等错误场景）。

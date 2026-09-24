@@ -1,3 +1,6 @@
 node_modules/
 *.tgz
 .DS_Store
+
+# AI 助手项目级规则（不入库）
+CLAUDE.md
