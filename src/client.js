@@ -62,6 +62,7 @@ window.__ModuleLoader__.load({
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 
     var React = require('react');
+    var ReactDOMClient = require('react-dom/client');
 
     try {
       console.log('[dsh-notify-xc] bundle loaded')
@@ -158,6 +159,43 @@ window.__ModuleLoader__.load({
       disabled: { opacity: 0.5, cursor: "default" },
       disabledBtn: { opacity: 0.5, cursor: "default" },
     }
+
+    // 一键清空按钮：仅当可清理通知数 >3 显形（写死，不可配置）。右上角落位，
+    // 避开右下角系统 toast。样式走 DSH design token，浅/深色自动适配。
+    var CLEAR_BUTTON_MIN = 4;
+    var clearBtnStyle = {
+      position: "fixed",
+      top: 76,
+      right: 16,
+      zIndex: 1500,
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      cursor: "pointer",
+      font: "inherit",
+      color: "var(--dsw-alias-label-secondary, #61666b)",
+      background: "color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 72%, transparent)",
+      border: "1px solid color-mix(in srgb, var(--dsw-alias-border-l2, rgba(0,0,0,0.12)) 55%, transparent)",
+      borderRadius: "8px",
+      padding: "5px 11px",
+      fontSize: "12px",
+      lineHeight: "18px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+      userSelect: "none",
+    };
+    var clearBtnBadge = {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 16,
+      height: 16,
+      padding: "0 4px",
+      borderRadius: 8,
+      fontSize: 11,
+      lineHeight: "16px",
+      color: "#ffffff",
+      background: "var(--dsw-alias-state-error-primary, #d93026)",
+    };
 
     function truncate(text, max) {
       if (text.length <= max) return text;
@@ -808,6 +846,74 @@ window.__ModuleLoader__.load({
       prevPending.clear();
     }
 
+    // ----------------------------------------------------- 一键清空浮动按钮
+    // 独立 React root（createRoot）挂到 body 根；右上角落位。count>3 显形。
+    var clearRootEl = null;
+    var clearRootAPI = null;   // react-dom root
+    var clearNotify = null;    // 计数变化时调用以触发重渲染
+    var clearTimer = null;
+
+    /** 触发计数重渲染；由 setInterval 兜底驱动（规避对 hook 通知缺失的依赖）。 */
+    function bumpClearCount() {
+      if (clearNotify) { try { clearNotify(); } catch (error) { /* ignore */ } }
+    }
+
+    /** 仅当可清理通知数 >= CLEAR_BUTTON_MIN 时渲染按钮。 */
+    function ClearAllButton() {
+      var state = React.useState(0); // 计数刷新用的抽头；实值每帧从 liveNotifications.size 读
+      clearNotify = function () { return state[1](state[0] + 1); };
+      var count = liveNotifications.size;
+      if (count < CLEAR_BUTTON_MIN) return null;
+      return React.createElement('button', {
+        type: 'button',
+        style: clearBtnStyle,
+        title: '清空全部 ' + count + ' 条通知',
+        onClick: function () {
+          clearAllNotifications();
+          bumpClearCount();
+        },
+      },
+        React.createElement('span', { style: clearBtnBadge }, count),
+        ' 清空'
+      );
+    }
+
+    /** 挂载浮动按钮（apply 时调用一次）；失败降级为日志，不拖垮页面。 */
+    function mountClearButton() {
+      try {
+        if (clearRootEl || typeof document === 'undefined') return;
+        if (!ReactDOMClient || typeof ReactDOMClient.createRoot !== 'function') {
+          console.warn('[dsh-notify-xc] react-dom/client 不可用；一键清空按钮关闭');
+          return;
+        }
+        clearRootEl = document.createElement('div');
+        clearRootEl.setAttribute('id', 'dsh-notify-xc-clear-root');
+        clearRootEl.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:1500;pointer-events:none;';
+        document.body.appendChild(clearRootEl);
+        clearRootAPI = ReactDOMClient.createRoot(clearRootEl);
+        clearRootAPI.render(React.createElement(ClearAllButton));
+        // 计数由 setInterval 兜底刷新：登记/摘除通知时无需额外触发，1.5s 内自然显隐。
+        clearTimer = setInterval(bumpClearCount, 1500);
+      } catch (error) {
+        console.warn('[dsh-notify-xc] clear button mount failed:', error);
+        if (clearRootEl && clearRootEl.parentNode) {
+          try { clearRootEl.parentNode.removeChild(clearRootEl); } catch (e2) { /* ignore */ }
+        }
+        clearRootEl = null;
+      }
+    }
+
+    /** 卸载浮动按钮（effect 清理时调用）。 */
+    function unmountClearButton() {
+      if (clearTimer !== null) { try { clearInterval(clearTimer); } catch (error) { /* ignore */ } clearTimer = null; }
+      if (clearRootAPI) { try { clearRootAPI.unmount(); } catch (error) { /* ignore */ } clearRootAPI = null; }
+      if (clearRootEl && clearRootEl.parentNode) {
+        try { clearRootEl.parentNode.removeChild(clearRootEl); } catch (error) { /* ignore */ }
+      }
+      clearRootEl = null;
+      clearNotify = null;
+    }
+
     // ------------------------------------------------------------------- apply
     var applied = false;
 
@@ -886,10 +992,18 @@ window.__ModuleLoader__.load({
                 pendingTimer: doneTimers.has(sessionId),
               };
             },
+            liveCount: function () { return liveNotifications.size; },
+            clearAll: function () { var n = clearAllNotifications(); bumpClearCount(); return n; },
           };
         } catch (error) {
           console.warn('[dsh-notify-xc] debug hook install failed:', error);
         }
+
+        // 7) 右上角一键清空浮动按钮：通知数>3 显形，点击清空全部本插件通知。
+        mountClearButton();
+        ctx.effect(function () {
+          return unmountClearButton;
+        }, 'dsh-notify-xc: clear button');
       } catch (error) {
         console.warn('[dsh-notify-xc] apply failed:', error);
       }
