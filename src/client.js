@@ -292,6 +292,22 @@ window.__ModuleLoader__.load({
       }
     }
 
+    // ------------------------------------------------------ 通知一键清空
+    // 登记本插件创建、仍未关闭的 Notification 实例；onclose/onclick/onerror 自动摘除。
+    // 仅能清「本会话内引用仍存活」的通知（页面刷新后引用丢失的平台限制）。
+    var liveNotifications = new Set();
+
+    /** 关闭全部登记通知，返回清理数量。对已失效实例 close() 是安全 no-op。 */
+    function clearAllNotifications() {
+      var n = 0;
+      liveNotifications.forEach(function (nt) {
+        try { nt.close(); } catch (error) { /* ignore */ }
+        n++;
+      });
+      liveNotifications.clear();
+      return n;
+    }
+
     function sendSystemNotification(type, title, detail, sessionId) {
       if (!shouldSendSystemNotification(type)) return;
       if (systemPermission() !== 'granted') return;
@@ -303,8 +319,17 @@ window.__ModuleLoader__.load({
           // 需要输入通知常驻：requireInteraction 让气泡停在通知中心直到用户处理。
           requireInteraction: type === 'input' && settings.persist === true,
         });
+        // 登记进清除集合：onclose 在通知被关闭/系统超时后触发，自动防泄漏。
+        liveNotifications.add(notification);
+        notification.onclose = function () {
+          liveNotifications.delete(notification);
+        };
+        notification.onerror = function () {
+          liveNotifications.delete(notification);
+        };
         notification.onclick = function () {
           try {
+            liveNotifications.delete(notification);
             window.focus();
             if (sessionId && ctxRef && ctxRef.sessions && typeof ctxRef.sessions.open === 'function') {
               ctxRef.sessions.open(sessionId);
