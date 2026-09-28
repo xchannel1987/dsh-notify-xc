@@ -61,6 +61,19 @@ Each of the three types (task-done / needs-input / error) has its own independen
 - Debugging: `window.__dshNotifyXc.probe('<sessionId>')` reports whether that session is
   currently considered "waiting on background work", "held", or "has a pending timer"
 
+### 🧹 One-Click Clear All Notifications
+- When the plugin has more than 3 clearable notifications, a floating "Clear" button appears
+  at the top-right of the page, with a badge showing the current count
+- One click immediately closes all of the plugin notifications (no confirmation dialog);
+  the button auto-disappears once cleared
+- The badge reflects notifications actually issued in the current page session; ones you've
+  already dismissed are automatically not counted (OS-expiry reclamation depends on the browser
+  platform, and the count may lag slightly in some cases)
+- **Platform limitation**: bounded by the browser Notification API, only notifications with live
+  in-page references in the current session can be closed programmatically; historical bubbles
+  left in the notification center after a page refresh cannot be reclaimed by script and must be
+  cleared manually
+
 ## 📦 Installation
 
 ```bash
