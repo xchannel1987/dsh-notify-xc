@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## v0.2.7 (2026-09-28)
+
+- ui: 一键清空浮动按钮文字改成「清空通知」（保留红色计数角标，仅调整文案，无行为变化）。
+
+## v0.2.6 (2026-09-28)
+
+- feat: 新增「一键清空通知」——本插件可清理的通知多于 3 条时，页面**右上角**出现带红色计数角标的「清空」浮动按钮，点击立即关闭全部本插件通知（无确认弹窗），清完后按钮自动消失。
+- feat: 通知生命周期登记——`sendSystemNotification` 创建的每个 `Notification` 实例登记进 `liveNotifications` Set，`onclose`/`onerror`/`onclick` 自动摘除（防泄漏）；新增 `clearAllNotifications()` 遍历关闭全部并返回清理数量。
+- feat: 调试钩子扩展——`window.__dshNotifyXc` 新增 `liveCount()`（当前可清理数）与 `clearAll()`（立即清空并返回数量）。
+- fix: 浮动按钮不可点——宿主全屏覆盖层是 `pointer-events:none`（CSS 继承属性），按钮初版缺 `pointerEvents:"auto"` 导致点击永远无法到达；已补上并保持覆盖层不拦截按钮外的页面点击。
+- fix: 计数刷新改用 functional updater，规避陈旧闭包导致 React bail-out；挂载失败时复位 root 引用，避免卸载目标悬空。
+- tech: `require("react-dom/client")` 加 try/catch 守卫——极端情况下解析失败只禁用清空按钮，不拖垮整个插件。
+- ui: 按钮右上角固定定位（top:76 right:16 zIndex:1500），避开右下角 Windows 系统通知 toast 区域，深浅色自适应。
+- docs: README / README_EN 新增「一键清空通知」小节，说明触发阈值、点击行为与平台限制。
+- chore: 版本 0.2.5 → 0.2.6。
+# CHANGELOG
+
 ## v0.2.5 (2026-09-24)
 
 - chore（工程化规范化，无运行时改动，npm 包内容不变）：
