@@ -62,7 +62,7 @@ Each of the three types (task-done / needs-input / error) has its own independen
   currently considered "waiting on background work", "held", or "has a pending timer"
 
 ### 🧹 One-Click Clear All Notifications
-- When the plugin has more than 3 clearable notifications, a floating "Clear" button appears
+- When the plugin has more than 3 clearable notifications, a floating "Clear Notifications" button appears
   at the top-right of the page, with a badge showing the current count
 - One click immediately closes all of the plugin notifications (no confirmation dialog);
   the button auto-disappears once cleared

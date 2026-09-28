@@ -877,7 +877,7 @@ window.__ModuleLoader__.load({
         },
       },
         React.createElement('span', { style: clearBtnBadge }, count),
-        ' 清空'
+        ' 清空通知'
       );
     }
 
