@@ -106,7 +106,8 @@ npm install dsh-notify-xc
 
 ## 🔧 兼容性
 
-- 基于 [dsh-agent-notify](https://github.com/chidaic/dsh-agent-notify) 面向新版 DSH 的兼容重写，适配 DSH 0.1.2-alpha.4
+- 基于 [dsh-agent-notify](https://github.com/chidaic/dsh-agent-notify) 面向新版 DSH 的兼容重写，实测适配 DSH 0.1.2-alpha.4 ~ 0.2.1-rc.2
+- 客户端会话 API 两代自适应：待处理交互优先读 `uiSession.sessionStatus`（DSH ≥ 0.2.0），回退 `uiSession.pendingInteractions`（0.1.x）；点击直达优先 `uiWorkspace.openSession()`（≥ 0.2.0），回退 `sessions.open()`
 - 纯浏览器端插件（host half 为空），手写 bundle 无构建步骤
 - 设置页注册进官方 `settings.section` slot（与官方设置页同源 UI）
 - 依赖浏览器 `Notification` API（桌面 Edge / Chrome 可用）；移动浏览器不支持时设置页置灰并提示（iOS 的系统通知仅支持 Service Worker Web Push，本插件未接入，不支持）

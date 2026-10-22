@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.2.8 (2026-10-22)
+
+- fix（**DSH 0.2.0+ 兼容性回归，需要输入通知完全失效**）：待处理交互数据源从 `uiSession.pendingInteractions` 迁移到 `uiSession.sessionStatus`。DSH 0.2.0 删除了前者（0.1.5-rc.2 有、0.2.0-rc.2 起为 0 处），改为 `Map<sessionId, {running, pendingInteraction, completionUnread}>`；旧代码取不到 store 后仅打一条 warning 就关闭整条链路，导致 `askUserQuestion` / 审批 / 计划审阅不再弹通知且无任何报错。新实现按两条 API 自适应（优先 sessionStatus，旧 store 保留为 0.1.x 回退），kind 映射（question / approval / plan-review）与正文拼装逻辑不变。
+- fix（**点击通知不再跳转会话**）：DSH 0.2.0 删除了 `sessions.open()`，改由 `uiWorkspace.openSession()` 切换主视图。点击处理改为优先调用新 API（经 `ctx.get` 可选探测，不新增硬 inject，避免旧版宿主卡住插件激活），旧 `sessions.open()` 保留为回退；两者都没有时只记日志。
+- fix（**「等子代理 / 工作流时不通知」判定降级**）：DSH 0.2.0 起会话列表快照不再提供 `jobsBySession` / `subagentsByParent`。子代理运行态改从 `uiSession.sessionStatus` 补读（列表行 `running` 对未打开的子代理可能滞后），旧字段存在时仍按原逻辑生效；新增 `recheckHeldSessions()`，让「挂起的会话在等的那批活跑完」既由列表变化、也由运行态变化驱动复查，避免 0.2.x 下漏发完成通知。
+- test: 用 Node 桩浏览器环境（window / React / Notification / localStorage）直接加载 `lib/client.js` 跑三组场景验证：新版 API 形态下「需要你的回答 / 需要你的批准 / 请审阅计划」各弹 1 条、点击调用 `uiWorkspace.openSession`、任务完成通知不受影响；旧版 API 形态（`pendingInteractions` + `sessions.open`）保持可用；后台子代理运行期间不误报完成、子代理结束后补发且仅发 1 条。
+- docs: README / README_EN 兼容性小节更新为「0.1.2-alpha.4 ~ 0.2.1-rc.2 实测」并说明两代客户端 API 的自适应策略。
+- chore: 版本 0.2.7 → 0.2.8。
+
 ## v0.2.7 (2026-09-28)
 
 - ui: 一键清空浮动按钮文字改成「清空通知」（保留红色计数角标，仅调整文案，无行为变化）。
